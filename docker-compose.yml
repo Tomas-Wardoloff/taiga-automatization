@@ -1,0 +1,55 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: taiga_metrics_n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: n8n_internal_db
+      DB_POSTGRESDB_USER: ${POSTGRES_USER}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      - postgres
+    volumes:
+      - n8n-data:/home/node/.n8n
+
+  metabase:
+    image: metabase/metabase:latest
+    container_name: taiga_metrics_metabase
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabase_internal_db
+      MB_DB_PORT: 5432
+      MB_DB_USER: ${POSTGRES_USER}
+      MB_DB_PASS: ${POSTGRES_PASSWORD}
+      MB_DB_HOST: postgres
+    depends_on:
+      - postgres
+    volumes:
+      - metabase-data:/metabase-data
+
+  postgres:
+    image: postgres:latest
+    container_name: taiga_metrics_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./init-db:/docker-entrypoint-initdb.d
+
+volumes:
+  pgdata:
+  n8n-data:
+  metabase-data:
