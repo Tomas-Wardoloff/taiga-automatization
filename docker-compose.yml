@@ -12,6 +12,11 @@ services:
       DB_POSTGRESDB_DATABASE: n8n_internal_db
       DB_POSTGRESDB_USER: ${POSTGRES_USER}
       DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+      # Taiga API credentials
+      TAIGA_API_URL: ${TAIGA_API_URL}
+      TAIGA_USER: ${TAIGA_USER}
+      TAIGA_PASSWORD: ${TAIGA_PASSWORD}
+      TAIGA_PROJECT_ID: ${TAIGA_PROJECT_ID}
     depends_on:
       - postgres
     volumes:
