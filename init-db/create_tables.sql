@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS daily_burndown (
     points_remaining NUMERIC(5, 2),
     points_ideal NUMERIC(5, 2), 
     UNIQUE(snapshot_date, sprint_id),
-    CONSTRAINT project_fk FOREIGN KEY (project_id) REFERENCES projects(project_id)
+    CONSTRAINT project_fk FOREIGN KEY (project_id) REFERENCES projects(id)
 );
 
 CREATE TABLE IF NOT EXISTS work_item_cycle_time (
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS work_item_cycle_time (
     finished_at TIMESTAMP,
     cycle_time_days NUMERIC(7, 2),
     UNIQUE(item_taiga_id, item_type),
-    CONSTRAINT project_fk FOREIGN KEY (project_id) REFERENCES projects(project_id)
+    CONSTRAINT project_fk FOREIGN KEY (project_id) REFERENCES projects(id)
 );
 
 CREATE TABLE IF NOT EXISTS daily_issue_snapshot (
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS daily_issue_snapshot (
     status_name VARCHAR(100),
     issue_count INT,
     UNIQUE(snapshot_date, project_id, status_name),
-    CONSTRAINT project_fk FOREIGN KEY (project_id) REFERENCES projects(project_id)
+    CONSTRAINT project_fk FOREIGN KEY (project_id) REFERENCES projects(id)
 );
 
 CREATE TABLE IF NOT EXISTS daily_workload_snapshot (
@@ -57,5 +57,5 @@ CREATE TABLE IF NOT EXISTS daily_workload_snapshot (
     user_name VARCHAR(255),
     active_task_count INT,
     UNIQUE(snapshot_date, project_id, user_name),
-    CONSTRAINT project_fk FOREIGN KEY (project_id) REFERENCES projects(project_id)
+    CONSTRAINT project_fk FOREIGN KEY (project_id) REFERENCES projects(id)
 );
