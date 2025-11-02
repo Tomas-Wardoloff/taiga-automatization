@@ -1,0 +1,187 @@
+{
+  "name": "Sprint Velocity",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 2,
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -688,
+        -288
+      ],
+      "id": "539f0449-fafd-4c08-be84-0961de06ed6d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.TAIGA_API_URL }}/milestones",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "=httpBearerAuth: {{ $json.auth_token }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "project",
+              "value": "={{ $env.TAIGA_PROJECT_ID }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -192,
+        -288
+      ],
+      "id": "9ae87ccb-741f-45b4-b0bb-b47305168201",
+      "name": "HTTP Request",
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "TR4PidouVgr1ac6b",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const sprints = $input.all(); \nconst resultsArray = [];\n\nfor (const item of sprints) {\n  const sprint = item.json;\n\n  const sprintData = {\n    sprint_id: sprint.id,\n    sprint_name: sprint.name,\n    project_id: sprint.project,\n    points_completed: sprint.closed_points || 0,\n    sprint_start_date: sprint.estimated_start,\n    sprint_end_date: sprint.estimated_finish\n  };\n\n  resultsArray.push(sprintData);\n}\n\nreturn resultsArray.map(sprintData => ({ json: sprintData }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        -288
+      ],
+      "id": "7fc3ecdb-974b-4236-ac1d-aa7e3d2e72e2",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO sprint_velocity (sprint_id, sprint_name, project_id, points_completed, sprint_start_date, sprint_end_date)\nVALUES ($1, $2, $3, $4, $5, $6)\nON CONFLICT (sprint_id, project_id) DO UPDATE SET\n  points_completed = EXCLUDED.points_completed;",
+        "options": {
+          "queryReplacement": "={{ $json.sprint_id }}, {{ $json.sprint_name }}, {{ $json.project_id }}, {{ $json.points_completed }}, {{ $json.sprint_start_date }}, {{ $json.sprint_end_date }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        -288
+      ],
+      "id": "75fa0fe6-4d4c-4d98-865e-bf9d69591df7",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "jQqTUOwBREgJiUug",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.TAIGA_API_URL }}/auth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "password",
+              "value": "={{ $env.TAIGA_PASSWORD }}"
+            },
+            {
+              "name": "username",
+              "value": "={{ $env.TAIGA_USER }}"
+            },
+            {
+              "name": "type",
+              "value": "normal"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -432,
+        -288
+      ],
+      "id": "306b9ead-c24f-43ba-90a5-432b7f18b1c6",
+      "name": "HTTP Request1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "448b9308-dc35-4d5b-917d-02b41e13322b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e4ff5adbddc7984b4e0ad8f2a0cea89d0307c7d240ec2cdb2babed007d3e966f"
+  },
+  "id": "fWwPjjt0cRctYYdy",
+  "tags": []
+}
