@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS sprint_velocity (
     sprint_end_date DATE,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(sprint_id, project_id),
-    CONSTRAINT project_fk FOREIGN KEY (project_id) REFERENCES projects(project_id)
+    CONSTRAINT project_fk FOREIGN KEY (project_id) REFERENCES projects(id)
 );
 
 CREATE TABLE IF NOT EXISTS daily_burndown (
