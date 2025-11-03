@@ -19,11 +19,105 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        -688,
+        320,
         -288
       ],
       "id": "539f0449-fafd-4c08-be84-0961de06ed6d",
       "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.TAIGA_API_URL }}/milestones",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "=httpBearerAuth: {{ $json.auth_token }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "project",
+              "value": "={{ $env.TAIGA_PROJECT_ID }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        992,
+        -288
+      ],
+      "id": "9ae87ccb-741f-45b4-b0bb-b47305168201",
+      "name": "Get Project Milestones",
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "TR4PidouVgr1ac6b",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const sprints = $(\"Get Project Milestones\").all();\nconst resultsArray = [];\n\nconst project_id = $('Call \\'Get / Insert Project\\'').first().json.project_id\n\nfor (const item of sprints) {\n  const sprint = item.json;\n\n  const sprintData = {\n    sprint_id: sprint.id,\n    sprint_name: sprint.name,\n    project_id: Number(project_id),\n    points_completed: sprint.closed_points || 0,\n    sprint_start_date: sprint.estimated_start,\n    sprint_end_date: sprint.estimated_finish\n  };\n\n  resultsArray.push(sprintData);\n}\n\nreturn resultsArray.map(sprintData => ({ json: sprintData }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        -288
+      ],
+      "id": "7fc3ecdb-974b-4236-ac1d-aa7e3d2e72e2",
+      "name": "Clean Data"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO sprint_velocity (sprint_id, sprint_name, project_id, points_completed, sprint_start_date, sprint_end_date)\nVALUES ($1, $2, $3, $4, $5, $6)\nON CONFLICT (sprint_id, project_id) DO UPDATE SET\n  points_completed = EXCLUDED.points_completed;",
+        "options": {
+          "queryReplacement": "={{ $json.sprint_id }}, {{ $json.sprint_name }}, {{ $json.project_id }}, {{ $json.points_completed }}, {{ $json.sprint_start_date }}, {{ $json.sprint_end_date }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1440,
+        -288
+      ],
+      "id": "75fa0fe6-4d4c-4d98-865e-bf9d69591df7",
+      "name": "Insert Data",
+      "credentials": {
+        "postgres": {
+          "id": "jQqTUOwBREgJiUug",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "y4paZ2Wef6gQvVaw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/y4paZ2Wef6gQvVaw",
+          "cachedResultName": "Get Project ID"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        768,
+        -288
+      ],
+      "id": "a2048947-5c1c-4dec-a55c-2207937adbb8",
+      "name": "Call 'Get / Insert Project'"
     },
     {
       "parameters": {
@@ -51,309 +145,11 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -432,
+        544,
         -288
       ],
-      "id": "306b9ead-c24f-43ba-90a5-432b7f18b1c6",
+      "id": "76f23f55-81c6-473a-b93f-ee2d54c96d99",
       "name": "Auth Token"
-    },
-    {
-      "parameters": {
-        "url": "={{ $env.TAIGA_API_URL }}/milestones",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "=httpBearerAuth: {{ $json.auth_token }}",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "project",
-              "value": "={{ $env.TAIGA_PROJECT_ID }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [
-        1280,
-        -288
-      ],
-      "id": "9ae87ccb-741f-45b4-b0bb-b47305168201",
-      "name": "Get Project Milestones",
-      "alwaysOutputData": true,
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "TR4PidouVgr1ac6b",
-          "name": "Bearer Auth account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "select",
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "projects",
-          "mode": "list",
-          "cachedResultName": "projects"
-        },
-        "limit": 1,
-        "where": {
-          "values": [
-            {
-              "column": "project_id",
-              "value": "={{ $env.TAIGA_PROJECT_ID }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        32,
-        -288
-      ],
-      "id": "2d19f7b1-766d-4c9c-9495-a4e41fd05e9f",
-      "name": "Check If Project Exists",
-      "alwaysOutputData": true,
-      "retryOnFail": false,
-      "credentials": {
-        "postgres": {
-          "id": "jQqTUOwBREgJiUug",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "projects",
-          "mode": "list",
-          "cachedResultName": "projects"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "project_id": "={{ $('Get Project').item.json.id }}",
-            "project_name": "={{ $('Get Project').item.json.name }}"
-          },
-          "matchingColumns": [
-            "id"
-          ],
-          "schema": [
-            {
-              "id": "id",
-              "displayName": "id",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "project_id",
-              "displayName": "project_id",
-              "required": true,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "project_name",
-              "displayName": "project_name",
-              "required": true,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        560,
-        -96
-      ],
-      "id": "6ebde580-e827-40a1-8970-ca56daf50a46",
-      "name": "Insert Project",
-      "alwaysOutputData": true,
-      "credentials": {
-        "postgres": {
-          "id": "jQqTUOwBREgJiUug",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const sprints = $(\"Get Project Milestones\").all();\nconst resultsArray = [];\n\nconst project_id = $('Merge').first().json.project_id\n\nfor (const item of sprints) {\n  const sprint = item.json;\n\n  const sprintData = {\n    sprint_id: sprint.id,\n    sprint_name: sprint.name,\n    project_id: Number(project_id),\n    points_completed: sprint.closed_points || 0,\n    sprint_start_date: sprint.estimated_start,\n    sprint_end_date: sprint.estimated_finish\n  };\n\n  resultsArray.push(sprintData);\n}\n\nreturn resultsArray.map(sprintData => ({ json: sprintData }));"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1536,
-        -288
-      ],
-      "id": "7fc3ecdb-974b-4236-ac1d-aa7e3d2e72e2",
-      "name": "Clean Data"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "INSERT INTO sprint_velocity (sprint_id, sprint_name, project_id, points_completed, sprint_start_date, sprint_end_date)\nVALUES ($1, $2, $3, $4, $5, $6)\nON CONFLICT (sprint_id, project_id) DO UPDATE SET\n  points_completed = EXCLUDED.points_completed;",
-        "options": {
-          "queryReplacement": "={{ $json.sprint_id }}, {{ $json.sprint_name }}, {{ $json.project_id }}, {{ $json.points_completed }}, {{ $json.sprint_start_date }}, {{ $json.sprint_end_date }}"
-        }
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        1824,
-        -288
-      ],
-      "id": "75fa0fe6-4d4c-4d98-865e-bf9d69591df7",
-      "name": "Insert Data",
-      "credentials": {
-        "postgres": {
-          "id": "jQqTUOwBREgJiUug",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "bfd7fbfc-2c28-43bf-81c9-f4f8ff76136c",
-              "leftValue": "={{ $json.isEmpty() }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "false",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "looseTypeValidation": true,
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        272,
-        -288
-      ],
-      "id": "84f9b174-3d76-4f66-893b-e8e8c3e246ba",
-      "name": "If Project Exists"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "bb285b12-ed04-49d0-bee6-61e7e43f6e30",
-              "name": "project_id",
-              "value": "={{ $json.id }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        640,
-        -304
-      ],
-      "id": "59d7b5ca-e2bd-42e0-bb08-6a4afe41c8e1",
-      "name": "Set Final Project ID"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "ad669cca-3bc2-4c30-9104-7541f72d6e12",
-              "name": "project_id",
-              "value": "={{ $json.id }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        736,
-        -96
-      ],
-      "id": "6853bee1-efa1-4709-bc7a-0c31839654ac",
-      "name": "Set Final Project ID2"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        1024,
-        -288
-      ],
-      "id": "92c3cd2b-d4a2-4aab-9197-9d1b690ecaeb",
-      "name": "Merge",
-      "alwaysOutputData": false
-    },
-    {
-      "parameters": {
-        "url": "={{ $env.TAIGA_API_URL }}/projects/{{ $env.TAIGA_PROJECT_ID }}",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "=httpBearerAuth: {{ $json.auth_token }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [
-        -192,
-        -288
-      ],
-      "id": "7e6062c9-7741-4eba-8f4d-7bd7199ba447",
-      "name": "Get Project",
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "TR4PidouVgr1ac6b",
-          "name": "Bearer Auth account"
-        }
-      }
     }
   ],
   "pinData": {},
@@ -363,17 +159,6 @@
         [
           {
             "node": "Auth Token",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Auth Token": {
-      "main": [
-        [
-          {
-            "node": "Get Project",
             "type": "main",
             "index": 0
           }
@@ -391,28 +176,6 @@
         ]
       ]
     },
-    "Check If Project Exists": {
-      "main": [
-        [
-          {
-            "node": "If Project Exists",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Insert Project": {
-      "main": [
-        [
-          {
-            "node": "Set Final Project ID2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Clean Data": {
       "main": [
         [
@@ -424,47 +187,7 @@
         ]
       ]
     },
-    "If Project Exists": {
-      "main": [
-        [
-          {
-            "node": "Set Final Project ID",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Insert Project",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set Final Project ID": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set Final Project ID2": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge": {
+    "Call 'Get / Insert Project'": {
       "main": [
         [
           {
@@ -475,11 +198,11 @@
         ]
       ]
     },
-    "Get Project": {
+    "Auth Token": {
       "main": [
         [
           {
-            "node": "Check If Project Exists",
+            "node": "Call 'Get / Insert Project'",
             "type": "main",
             "index": 0
           }
@@ -491,7 +214,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "db1c9ba5-b442-4864-85d9-dcef6c9e740e",
+  "versionId": "c55cfee5-9aba-419f-8999-a50de25fd256",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "e4ff5adbddc7984b4e0ad8f2a0cea89d0307c7d240ec2cdb2babed007d3e966f"

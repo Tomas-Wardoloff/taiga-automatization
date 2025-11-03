@@ -1,0 +1,367 @@
+{
+  "name": "Get Project ID",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "projects",
+          "mode": "list",
+          "cachedResultName": "projects"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "project_id",
+              "value": "={{ $env.TAIGA_PROJECT_ID }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1536,
+        304
+      ],
+      "id": "35881a2b-515b-415a-b84a-24827388ab3a",
+      "name": "Check If Project Exists",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "postgres": {
+          "id": "jQqTUOwBREgJiUug",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "projects",
+          "mode": "list",
+          "cachedResultName": "projects"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "project_id": "={{ $('Get Project').item.json.id }}",
+            "project_name": "={{ $('Get Project').item.json.name }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "project_id",
+              "displayName": "project_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "project_name",
+              "displayName": "project_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1088,
+        400
+      ],
+      "id": "8dbecc9b-289b-4edd-b0cc-3919cb0031c4",
+      "name": "Insert Project",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "jQqTUOwBREgJiUug",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bfd7fbfc-2c28-43bf-81c9-f4f8ff76136c",
+              "leftValue": "={{ $json.isEmpty() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1312,
+        304
+      ],
+      "id": "70e811d5-dd4a-4dfc-90c7-c4db51061088",
+      "name": "If Project Exists"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bb285b12-ed04-49d0-bee6-61e7e43f6e30",
+              "name": "project_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -992,
+        208
+      ],
+      "id": "88ed1218-fcc7-4ba7-b2f6-6719c0b2f641",
+      "name": "Set Final Project ID"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ad669cca-3bc2-4c30-9104-7541f72d6e12",
+              "name": "project_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -864,
+        400
+      ],
+      "id": "2bf6c835-4301-4d7e-9bfe-5edc50064891",
+      "name": "Set Final Project ID2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -640,
+        304
+      ],
+      "id": "a2a7f807-0f28-4bf7-9817-8e778049a812",
+      "name": "Merge",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.TAIGA_API_URL }}/projects/{{ $env.TAIGA_PROJECT_ID }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "=httpBearerAuth: {{ $json.auth_token }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1760,
+        304
+      ],
+      "id": "6f66caeb-75b7-4a2d-8351-8552b2254dc6",
+      "name": "Get Project",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "TR4PidouVgr1ac6b",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1984,
+        304
+      ],
+      "id": "5c56d506-f7be-4213-b0a5-ea2ebda1a39e",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        304
+      ],
+      "id": "f176aa39-a8ce-4814-8012-b007f6b3688a",
+      "name": "No Operation, do nothing"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Check If Project Exists": {
+      "main": [
+        [
+          {
+            "node": "If Project Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Project": {
+      "main": [
+        [
+          {
+            "node": "Set Final Project ID2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Project Exists": {
+      "main": [
+        [
+          {
+            "node": "Set Final Project ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert Project",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Final Project ID": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Final Project ID2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get Project": {
+      "main": [
+        [
+          {
+            "node": "Check If Project Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get Project",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1b375a52-2224-4fb3-a9e2-fe4766ba0d27",
+  "meta": {
+    "instanceId": "e4ff5adbddc7984b4e0ad8f2a0cea89d0307c7d240ec2cdb2babed007d3e966f"
+  },
+  "id": "y4paZ2Wef6gQvVaw",
+  "tags": []
+}
