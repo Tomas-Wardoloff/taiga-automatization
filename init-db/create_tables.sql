@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS sprint_velocity (
 
 CREATE TABLE IF NOT EXISTS daily_burndown (
     id SERIAL PRIMARY KEY,
-    snapshot_date DATE NOT NULL,
+    snapshot_date DATE NOT NULL DEFAULT CURRENT_DATE,
     sprint_id BIGINT NOT NULL,
     project_id BIGINT,
     points_remaining NUMERIC(5, 2),
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS work_item_cycle_time (
 
 CREATE TABLE IF NOT EXISTS daily_issue_snapshot (
     id SERIAL PRIMARY KEY,
-    snapshot_date DATE NOT NULL,
+    snapshot_date DATE NOT NULL DEFAULT CURRENT_DATE,
     project_id BIGINT,
     status_name VARCHAR(100),
     issue_count INT,
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS daily_issue_snapshot (
 
 CREATE TABLE IF NOT EXISTS daily_workload_snapshot (
     id SERIAL PRIMARY KEY,
-    snapshot_date DATE NOT NULL,
+    snapshot_date DATE NOT NULL DEFAULT CURRENT_DATE,
     project_id BIGINT,
     user_name VARCHAR(255),
     active_task_count INT,
